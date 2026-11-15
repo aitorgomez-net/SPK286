@@ -43,13 +43,13 @@ class AluReferenceTests(unittest.TestCase):
         for op in OPERATIONS:
             result = evaluate(op, 0x800f, 0x7fff, 1)
             logical = op in ('AND', 'OR', 'XOR')
-            self.assertEqual(result.update_mask, 0x8c5 if logical else 0x8d5)
-            self.assertEqual(result.undefined_mask, 16 if logical else 0)
+            self.assertEqual(result.update_mask, 0x8d5)
+            self.assertEqual(result.undefined_mask, 0)
             for previous in (0x2, 0x7fd7, 0x4002, 0x3013):
                 self.assertEqual(result.commit(previous) & ~result.update_mask,
                                  previous & ~result.update_mask)
-            if logical:
-                self.assertEqual(result.flags & 0x801, 0)
+            if logical:  # CF and OF cleared, and AF as on the physical 80286
+                self.assertEqual(result.flags & 0x811, 0)
 
     def test_invalid_inputs(self):
         for args in (('MUL', 0, 0), ('ADD', -1, 0), ('ADD', 0, 65536), ('ADC', 0, 0, 2)):

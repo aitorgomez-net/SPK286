@@ -24,7 +24,7 @@ PROBES = (
     ('cmp-write', 'spk286_alu_decode', 'spk286_alu_instructions', "assign write_result = adjust_instruction || (kind != 3'd7 && !test_instruction);",
      "assign write_result = adjust_instruction || !test_instruction;", 'exact GPR result/preservation'),
     ('all-flags', 'spk286_micro_executor', 'spk286_alu_instructions',
-     'flags_mask_q <= adjust_complete ? adjust_mask : shift_complete ? shift_mask : (decoded_flags_mask & ~decoded_undefined_mask);', "flags_mask_q <= adjust_complete ? adjust_mask : shift_complete ? shift_mask : 16'h7FD5;", 'exact FLAGS and preserved bits'),
+     'flags_mask_q <= adjust_complete ? adjust_mask : shift_complete ? shift_mask : decoded_flags_mask;', "flags_mask_q <= adjust_complete ? adjust_mask : shift_complete ? shift_mask : 16'h7FD5;", 'exact FLAGS and preserved bits'),
 )
 
 

@@ -975,6 +975,22 @@ module spk286_protected_system_tb;
                                          "PM1 LSL not-present-code matrix");
             end
         end
+        // Conforming readable code, borrowed from the not-present-code row:
+        // "If the code segment is readable and conforming, the descriptor
+        // privilege level (DPL) can be any value for VERR" (Intel, VERR/VERW).
+        // The selector RPL does not matter either. VERW still rejects code.
+        for (integer dpl = 0; dpl < 4; dpl = dpl + 1)
+            write_pm1_matrix_descriptor(6'd60 + dpl, 8'h9E + dpl * 8'h20);
+        for (integer dpl = 0; dpl < 4; dpl = dpl + 1) begin
+            for (integer rpl = 0; rpl < 4; rpl = rpl + 1) begin
+                run_pm1_inspection_case(2'd0, 16'h01E0 + dpl * 8 + rpl, 1'b1, 16'h1234,
+                                        "PM1 VERR conforming-code DPL/RPL matrix");
+                run_pm1_inspection_case(2'd1, 16'h01E0 + dpl * 8 + rpl, 1'b0, 16'h1234,
+                                        "PM1 VERW conforming-code matrix");
+            end
+        end
+        for (integer dpl = 0; dpl < 4; dpl = dpl + 1)
+            write_pm1_matrix_descriptor(6'd60 + dpl, 8'h1A + dpl * 8'h20);
         run_pm1_inspection_case(2'd0, 16'h1238, 1'b0, 16'h1234,
                                 "PM1 VERR exact GDT-limit overflow is negative");
         run_pm1_inspection_case(2'd1, 16'h1238, 1'b0, 16'h1234,

@@ -195,6 +195,35 @@ module spk286_protected_task_gate_far_tb;
         while (!halted && cycles < 2000) tick();
         check(halted, "far JMP task-gate target reaches its handler");
 
+        // JMP FAR through a task gate that names a code segment, not a TSS:
+        // "Descriptor AR byte must specify available TSS ... else #GP (TSS
+        // selector)" (Intel 210498, JMP, JUMP TASK GATE). There is no IDT
+        // here, so the fault itself is the observation: it must be #GP with
+        // the selector in the gate, with no jump and no task switch.
+        cycles = 0;
+        initialize_case(1'b0);
+        write_descriptor(32'h2000 + 32'd8 * 5, 24'h000010, 16'h0000, 8'h85);
+        reset = 1'b1;
+        execute_enable = 1'b0;
+        tick();
+        reset = 1'b0;
+        execute_enable = 1'b1;
+        far_restart(16'h0000, 16'h0000);
+        begin
+            logic faulted, jumped;
+            faulted = 1'b0;
+            jumped = 1'b0;
+            while (!faulted && !shutdown && cycles < 1600) begin
+                tick();
+                if (debug_event_vector == 8'd13 && debug_event_error_valid &&
+                    debug_event_error_code == 16'h0010) faulted = 1'b1;
+                if (debug_cs == 16'h0028 || debug_tr_selector == 16'h0020) jumped = 1'b1;
+            end
+            check(faulted, "far JMP through a task gate that names a code segment takes #GP with that selector");
+            check(!jumped && debug_tr_selector == 16'h0018,
+                  "far JMP through such a gate neither jumps nor switches tasks");
+        end
+
         $display("PROTECTED_TASK_GATE_FAR PASS: %0d checks, cycles=%0d", checks, cycles);
         $finish;
     end

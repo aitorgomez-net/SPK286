@@ -18,7 +18,7 @@ def arithmetic(kind,a,b,flags):
     carry=flags%2 if kind in (2,3) else 0
     if kind in (1,4,6):
         value=a|b if kind==1 else (a&b if kind==4 else a^b)
-        result_flags=flags & ~0x8c5
+        result_flags=flags & ~0x8d5  # AF too: the physical 80286 clears it
     else:
         subtract=kind in (3,5,7)
         full=a-b-carry if subtract else a+b+carry

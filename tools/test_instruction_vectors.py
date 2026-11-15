@@ -63,7 +63,8 @@ def record(width, form, mode, reg, rm, seed, boundary=False):
     b = read(registers, reg, width) if form == 0 else source
     result = a & b
     blocked = memory and width == 16 and offset == 0xffff
-    expected_flags = flags if blocked else ((flags & ~0x08c5) |
+    # TEST clears AF with CF and OF, as the physical 80286 does.
+    expected_flags = flags if blocked else ((flags & ~0x08d5) |
                      (int(result >= 2 ** (width-1)) * 128) |
                      (int(result == 0) * 64) | (int((result % 256).bit_count() % 2 == 0) * 4))
     # The byte harness also compares the adjacent high byte; preserve its sentinel.

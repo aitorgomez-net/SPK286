@@ -13,7 +13,9 @@ OPERATIONS = ('ADD', 'OR', 'ADC', 'SBB', 'AND', 'SUB', 'XOR')
 EDGES = (0, 1, 15, 16, 255, 256, 0x7ffe, 0x7fff, 0x8000, 0x8001,
          0xfffe, 0xffff, 0x5555, 0xaaaa)
 ARITH_MASK = 0x08d5
-LOGIC_MASK = 0x08c5
+# AND, OR and XOR write AF as 0: undefined for Intel, and what the physical 80286 of the
+# SingleStepTests corpus does in every capture.
+LOGIC_MASK = 0x08d5
 
 
 @dataclass(frozen=True)
@@ -37,7 +39,7 @@ def evaluate(operation, a, b, carry=0):
     flags = 0
     if operation in ('AND', 'OR', 'XOR'):
         value = {'AND': a & b, 'OR': a | b, 'XOR': a ^ b}[operation]
-        mask, undefined = LOGIC_MASK, 0x10
+        mask, undefined = LOGIC_MASK, 0
     else:
         c = carry if operation in ('ADC', 'SBB') else 0
         subtract = operation in ('SUB', 'SBB', 'CMP')

@@ -13,11 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 PROBES = (
     ('test-write-suppression','spk286_alu_decode','spk286_test_instructions',
      "kind != 3'd7 && !test_instruction", "kind != 3'd7", 'TEST never writes data'),
-    ('test-undefined-af','spk286_micro_executor','spk286_test_instructions',
-     '(decoded_flags_mask & ~decoded_undefined_mask)', '(decoded_flags_mask | decoded_undefined_mask)', 'exact FLAGS and preserved bits'),
-    ('test-register-undefined-af','spk286_micro_executor','spk286_test_instructions',
-     'decoded_flags_mask & ~decoded_undefined_mask : sequential_flags_write_mask',
-     'decoded_flags_mask | decoded_undefined_mask : sequential_flags_write_mask', 'exact FLAGS and preserved bits'),
+    ('test-clears-af','spk286_alu_decode','spk286_test_instructions',
+     "inc_dec ? 16'h08D4 : 16'h08D5", "inc_dec ? 16'h08D4 : 16'h08C5", 'exact FLAGS and preserved bits'),
     ('inc-preserves-carry','spk286_alu_decode','spk286_scalar_direct',
      "inc_dec ? 16'h08D4", "inc_dec ? 16'h08D5", 'exact FLAGS and preserved bits'),
     ('sahf-preserves-controls','spk286_flags_decode','spk286_scalar_direct',
