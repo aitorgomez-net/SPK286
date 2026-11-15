@@ -224,6 +224,23 @@ module spk286_protected_task_gate_far_tb;
                   "far JMP through such a gate neither jumps nor switches tasks");
         end
 
+        // Bytes 0-1 and 4 of a task gate are unused (Intel 210498, figure
+        // 8-3): a gate with every bit set there still switches tasks.
+        cycles = 0;
+        initialize_case(1'b1);
+        write_descriptor(32'h2000 + 32'd8 * 5, 24'hFF0020, 16'hFFFF, 8'h85);
+        reset = 1'b1;
+        execute_enable = 1'b0;
+        tick();
+        reset = 1'b0;
+        execute_enable = 1'b1;
+        far_restart(16'h0000, 16'h0000);
+        wait_until_call_task_loaded();
+        check(memory[16'h2025] == 8'h83 && memory[16'h5000] == 8'h18,
+              "a task gate with non-zero unused fields occupies the target and links back");
+        check(debug_cs == 16'h0010 && debug_ip == 16'h0200 && debug_gpr[15:0] == 16'hBEEF,
+              "a task gate with non-zero unused fields enters the incoming task");
+
         $display("PROTECTED_TASK_GATE_FAR PASS: %0d checks, cycles=%0d", checks, cycles);
         $finish;
     end

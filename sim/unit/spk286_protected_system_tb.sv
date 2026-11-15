@@ -469,14 +469,16 @@ module spk286_protected_system_tb;
         memory[16'h9B28] = 8'h00; memory[16'h9B29] = 8'h86;
         memory[16'h9B2A] = 8'h00; memory[16'h9B2B] = 8'h00;
         // Software INT 20 uses an interrupt gate; INT 21 uses a trap
-        // gate. Both remain same-level transitions to CS=0038.
+        // gate. Both remain same-level transitions to CS=0038. Byte 4 is
+        // "not used by either of these gates" (Intel 210498, figure 9-3), so
+        // both carry FF there.
         memory[16'h9BBC] = 8'h40; memory[16'h9BBD] = 8'h01;
         memory[16'h9BBE] = 8'h38; memory[16'h9BBF] = 8'h00;
-        memory[16'h9BC0] = 8'h00; memory[16'h9BC1] = 8'h86;
+        memory[16'h9BC0] = 8'hFF; memory[16'h9BC1] = 8'h86;
         memory[16'h9BC2] = 8'h00; memory[16'h9BC3] = 8'h00;
         memory[16'h9BC4] = 8'h80; memory[16'h9BC5] = 8'h01;
         memory[16'h9BC6] = 8'h38; memory[16'h9BC7] = 8'h00;
-        memory[16'h9BC8] = 8'h00; memory[16'h9BC9] = 8'h87;
+        memory[16'h9BC8] = 8'hFF; memory[16'h9BC9] = 8'h87;
         memory[16'h9BCA] = 8'h00; memory[16'h9BCB] = 8'h00;
         // Vector 02 and external vector 22 use same-level interrupt
         // gates whose handlers execute IRET back into the protected caller.
@@ -533,10 +535,11 @@ module spk286_protected_system_tb;
         memory[16'h56EC] = 8'h00; memory[16'h56ED] = 8'hA4;
         memory[16'h56EE] = 8'h00; memory[16'h56EF] = 8'h00;
         // A second DPL-1 gate targeting the same entry point with
-        // two 80286 parameter words.
+        // two 80286 parameter words. Bits 5-7 of the count byte are don't
+        // care (Intel 210498, figure 7-10), so they are set here.
         memory[16'h56F0] = 8'h00; memory[16'h56F1] = 8'h01;
         memory[16'h56F2] = 8'h38; memory[16'h56F3] = 8'h00;
-        memory[16'h56F4] = 8'h02; memory[16'h56F5] = 8'hA4;
+        memory[16'h56F4] = 8'hE2; memory[16'h56F5] = 8'hA4;
         memory[16'h56F6] = 8'h00; memory[16'h56F7] = 8'h00;
         // GDT index 16: conforming readable code, and index 17: a DPL-0
         // call gate targeting it with an intentionally non-zero selector RPL.
