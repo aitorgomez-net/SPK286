@@ -144,6 +144,13 @@ and drove the adjustments needed to make the core work. Correctness rests on
 that verification — hardware-captured 80286 test data, independent reference
 models and mutation audits — not on who or what wrote the code.
 
+## Acknowledgements
+
+- **Mills32** ran the SPK286 test program on a real Intel N80286-12 and
+  provided the captures. Those measurements decide the behavior the Intel
+  manual leaves open or states differently; see the
+  [technical reference](docs/SPK286.md#96-measurements-on-a-physical-intel-80286).
+
 ## License
 
 SPK286 is released under the [MIT License](LICENSE). Source files carry an

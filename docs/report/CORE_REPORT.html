@@ -2428,7 +2428,7 @@ make full-check        <span class="comment"># everything, plus the profiled var
               <tr><td>Intel "Undocumented iAPX 286 Test Instruction"</td><td>LOADALL image layout.</td></tr>
               <tr><td><a href="https://github.com/SingleStepTests/80286" target="_blank" rel="noopener noreferrer">SingleStepTests/80286</a> (MIT)</td><td>Hardware-derived test corpus, fetched at build time and not redistributed.</td></tr>
               <tr><td><a href="https://github.com/dbalsom/moo" target="_blank" rel="noopener noreferrer">dbalsom/moo</a> (MIT)</td><td>MOO 1.1 format, implemented independently.</td></tr>
-              <tr><td>Measurements on a physical Intel N80286-12</td><td>Protected mode, event ordering and other behaviour the manual leaves open or states differently.</td></tr>
+              <tr><td>Measurements on a physical Intel N80286-12, captured by Mills32</td><td>Protected mode, event ordering and other behaviour the manual leaves open or states differently.</td></tr>
               <tr><td>86Box, PCem</td><td>Behavioral cross-references only; no code copied.</td></tr>
               <tr><td>MCL86, 80x86, z386, ao486</td><td>Architectural ideas only; no code copied.</td></tr>
             </tbody>
@@ -2445,6 +2445,11 @@ make full-check        <span class="comment"># everything, plus the profiled var
               tools and tests. spark2k06 set the architecture and scope, defined
               the verification strategy, ran the testing and drove the
               adjustments needed to make the core work.
+            </p>
+            <p>
+              <strong>Mills32</strong> ran the test program on a real Intel
+              N80286-12 and provided the captures behind the measurements
+              this document cites.
             </p>
             <p>
               No external CPU source code is included: emulators and other cores
