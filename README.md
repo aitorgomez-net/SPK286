@@ -10,6 +10,10 @@ task switching, the Bus Interface Unit and the timing policy. Machine logic
 (PC/AT chipset, video, storage, BIOS, FPGA board tops) belongs to the projects
 that use the core.
 
+The [technical datasheet](https://aitorgomez-net.github.io/SPK286/report/CORE_REPORT.html)
+is published with GitHub Pages from [docs/report](docs/report/CORE_REPORT.html);
+the full reference is [docs/SPK286.md](docs/SPK286.md).
+
 ## Status
 
 - Real mode: every documented 80286 instruction, checked against the
