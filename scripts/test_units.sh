@@ -41,6 +41,7 @@ tests+=(spk286_gate_target_rpl)
 tests+=(spk286_fault_metadata)
 tests+=(spk286_fault_precedence)
 tests+=(spk286_odd_protected_stack)
+tests+=(spk286_protected_stack_block)
 tests+=(spk286_system_access)
 tests+=(spk286_iopl_access)
 tests+=(spk286_protected_return_restart)
@@ -56,6 +57,8 @@ tests+=(spk286_encoding_preview)
 tests+=(spk286_length_boundary)
 tests+=(spk286_native)
 tests+=(spk286_real_idt_limit)
+tests+=(spk286_real_push_wrap)
+tests+=(spk286_real_event_order)
 if [[ "$unit" != all ]]; then tests=("$unit"); fi
 
 for name in "${tests[@]}"; do
