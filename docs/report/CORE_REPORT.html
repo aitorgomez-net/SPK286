@@ -1483,8 +1483,8 @@
             <h3>Hardware-derived oracle</h3>
             <p>
               Checked against the SingleStepTests/80286 captures from a physical
-              Harris N80C286-12, plus directed benches in two simulators and
-              mutation audits.
+              Harris N80C286-12 and against measurements on an Intel N80286-12,
+              plus directed benches in two simulators and mutation audits.
             </p>
           </article>
         </div>
@@ -1499,11 +1499,11 @@
             <div class="metric-label">Microcode entries / ROM words</div>
           </div>
           <div class="metric">
-            <div class="metric-value">9,247</div>
+            <div class="metric-value">9,467</div>
             <div class="metric-label">LUTs on Cyclone V (Yosys estimate)</div>
           </div>
           <div class="metric">
-            <div class="metric-value">1 M10K</div>
+            <div class="metric-value">2 M10K</div>
             <div class="metric-label">Microcode ROM · no DSP blocks</div>
           </div>
         </div>
@@ -1817,6 +1817,7 @@
               <span class="chip">743 words</span>
               <span class="chip">10-bit address</span>
               <span class="chip">8-bit control</span>
+              <span class="chip">4 flag bits</span>
               <span class="chip">0 unused words</span>
             </div>
           </div>
@@ -1903,7 +1904,7 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
               <tr>
                 <td>LOADALL (<code>0F 05</code>)</td>
                 <td><span class="status status-ok">Implemented</span></td>
-                <td>Fixed 102-byte image at 000800h, atomic commit, #GP(0) at nonzero CPL.</td>
+                <td>Fixed 102-byte image at 000800h, atomic commit, #GP(0) at nonzero CPL. MSW bits 4–15 load as 1 and a real-mode image masks FLAGS, as measured.</td>
               </tr>
               <tr>
                 <td>SALC (<code>D6</code>)</td>
@@ -1931,7 +1932,7 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
               <li>Data transfer, byte and word ALU, TEST, INC/DEC/NEG/NOT.</li>
               <li>Shifts and rotates, including immediate counts.</li>
               <li>MUL/IMUL/DIV/IDIV and immediate IMUL; decimal and ASCII adjust.</li>
-              <li>String instructions with REP/REPE/REPNE, restartable per iteration and interruptible between iterations.</li>
+              <li>String instructions with REP/REPE/REPNE, restartable per iteration and interruptible after every iteration, the last one included.</li>
               <li>Port and string I/O, PUSHA/POPA, ENTER/LEAVE, BOUND.</li>
               <li>Near and far transfers, LOOP/JCXZ, INT/INTO/IRET, HLT, segment override and LOCK prefixes.</li>
               <li>Byte IDIV overflow follows the physical 80286 captures; invalid opcodes raise #UD.</li>
@@ -1941,6 +1942,7 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
             <h3>Protected mode</h3>
             <ul>
               <li>LMSW, SMSW, LGDT, SGDT, LIDT, SIDT, LLDT, SLDT, LTR, STR, VERR, VERW, LAR, LSL, ARPL, CLTS — checks before any side effect.</li>
+              <li>LAR, LSL, VERR and VERW follow an Intel N80286-12 where it differs from the manual: conforming code passes whatever its DPL, and VERR/VERW ignore the present bit.</li>
               <li>Segment loads with selector, type, privilege, presence and limit checks, accessed-bit write-back and expand-down segments.</li>
               <li>Far CALL/JMP/RET, conforming and non-conforming, through call gates with parameter copying and TSS stacks.</li>
               <li>Interrupt and trap gates with error codes and outer-level stacks; same- and outer-level IRET.</li>
@@ -2012,10 +2014,11 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
 
         <div class="panel" style="margin-top: 22px">
           <ul class="check-list" style="margin-top: 0">
-            <li>Real-mode entry pushes FLAGS, CS and IP, clears IF and TF, reads the IVT, then commits CS:IP and flushes the queue in one step.</li>
+            <li>Real-mode entry pushes FLAGS, CS and IP, clears IF and TF, reads the vector at the IDTR base, then commits CS:IP and flushes the queue in one step.</li>
             <li>No event is admitted inside a frame or a physical operand word.</li>
             <li>A frame push that cannot complete leads to double fault or shutdown, never to unbounded recursion.</li>
-            <li>STI creates a one-instruction shadow only when IF goes from 0 to 1; MOV SS and POP SS inhibit interrupts for one instruction.</li>
+            <li>STI, and a POPF that sets IF, create a one-instruction shadow only when IF goes from 0 to 1; MOV SS and POP SS inhibit interrupts for one instruction.</li>
+            <li>A fault while delivering any event other than a software interrupt sets EXT in its error code.</li>
           </ul>
         </div>
       </section>
@@ -2117,15 +2120,15 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
             <div class="metric-label">SingleStep cases passing, zero failures</div>
           </div>
           <div class="metric">
-            <div class="metric-value">138</div>
+            <div class="metric-value">143</div>
             <div class="metric-label">Directed testbenches, two simulators</div>
           </div>
           <div class="metric">
-            <div class="metric-value">24</div>
+            <div class="metric-value">25</div>
             <div class="metric-label">Mutation audit families</div>
           </div>
           <div class="metric">
-            <div class="metric-value">60</div>
+            <div class="metric-value">61</div>
             <div class="metric-label">Python test modules</div>
           </div>
         </div>
@@ -2216,7 +2219,7 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
               <tr><th>Integrated core</th><th class="num">LUTs</th><th class="num">Arithmetic</th><th class="num">Registers</th><th class="num">M10K</th><th class="num">MLAB</th><th class="num">DSP</th></tr>
             </thead>
             <tbody>
-              <tr class="total"><td><code>spk286</code> (flattened)</td><td class="num">9,247</td><td class="num">2,651</td><td class="num">4,793</td><td class="num">1</td><td class="num">0</td><td class="num">0</td></tr>
+              <tr class="total"><td><code>spk286</code> (flattened)</td><td class="num">9,467</td><td class="num">2,946</td><td class="num">4,763</td><td class="num">2</td><td class="num">0</td><td class="num">0</td></tr>
             </tbody>
           </table>
         </div>
@@ -2226,19 +2229,19 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
           <p style="color: var(--muted)">
             Hierarchy and all debug ports kept, so per-module figures are an upper
             bound. Multiply and divide are iterative and use no DSP blocks; the
-            single M10K block holds the microcode ROM.
+            two M10K blocks hold the 13-bit microcode ROM.
           </p>
           <div class="bar-list">
-            <div class="bar-row"><code>micro_executor</code><div class="bar-track"><span class="bar-fill" style="width: 100%"></span></div><span class="bar-value">3,185</span></div>
-            <div class="bar-row"><code>spk286 (glue)</code><div class="bar-track"><span class="bar-fill" style="width: 46.2%"></span></div><span class="bar-value">1,471</span></div>
-            <div class="bar-row"><code>protected_state</code><div class="bar-track"><span class="bar-fill" style="width: 40.0%"></span></div><span class="bar-value">1,273</span></div>
-            <div class="bar-row"><code>task_segment_service</code><div class="bar-track"><span class="bar-fill" style="width: 21.0%"></span></div><span class="bar-value">669</span></div>
-            <div class="bar-row"><code>task_switch_service</code><div class="bar-track"><span class="bar-fill" style="width: 16.2%"></span></div><span class="bar-value">516</span></div>
-            <div class="bar-row"><code>segments</code><div class="bar-track"><span class="bar-fill" style="width: 14.8%"></span></div><span class="bar-value">472</span></div>
-            <div class="bar-row"><code>muldiv</code><div class="bar-track"><span class="bar-fill" style="width: 14.3%"></span></div><span class="bar-value">456</span></div>
-            <div class="bar-row"><code>registers</code><div class="bar-track"><span class="bar-fill" style="width: 13.4%"></span></div><span class="bar-value">426</span></div>
-            <div class="bar-row"><code>tss_service</code><div class="bar-track"><span class="bar-fill" style="width: 10.0%"></span></div><span class="bar-value">318</span></div>
-            <div class="bar-row"><code>events</code><div class="bar-track"><span class="bar-fill" style="width: 8.4%"></span></div><span class="bar-value">266</span></div>
+            <div class="bar-row"><code>micro_executor</code><div class="bar-track"><span class="bar-fill" style="width: 100%"></span></div><span class="bar-value">3,342</span></div>
+            <div class="bar-row"><code>spk286 (glue)</code><div class="bar-track"><span class="bar-fill" style="width: 46.6%"></span></div><span class="bar-value">1,558</span></div>
+            <div class="bar-row"><code>protected_state</code><div class="bar-track"><span class="bar-fill" style="width: 38.1%"></span></div><span class="bar-value">1,273</span></div>
+            <div class="bar-row"><code>task_segment_service</code><div class="bar-track"><span class="bar-fill" style="width: 19.9%"></span></div><span class="bar-value">665</span></div>
+            <div class="bar-row"><code>task_switch_service</code><div class="bar-track"><span class="bar-fill" style="width: 15.0%"></span></div><span class="bar-value">500</span></div>
+            <div class="bar-row"><code>segments</code><div class="bar-track"><span class="bar-fill" style="width: 14.1%"></span></div><span class="bar-value">472</span></div>
+            <div class="bar-row"><code>muldiv</code><div class="bar-track"><span class="bar-fill" style="width: 13.6%"></span></div><span class="bar-value">456</span></div>
+            <div class="bar-row"><code>registers</code><div class="bar-track"><span class="bar-fill" style="width: 12.7%"></span></div><span class="bar-value">426</span></div>
+            <div class="bar-row"><code>tss_service</code><div class="bar-track"><span class="bar-fill" style="width: 9.5%"></span></div><span class="bar-value">318</span></div>
+            <div class="bar-row"><code>events</code><div class="bar-track"><span class="bar-fill" style="width: 7.7%"></span></div><span class="bar-value">257</span></div>
           </div>
         </div>
 
@@ -2251,31 +2254,31 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
                   <tr><th>Module</th><th class="num">LUTs</th><th class="num">Arith.</th><th class="num">Regs</th><th class="num">M10K</th></tr>
                 </thead>
                 <tbody>
-                  <tr><td><code>spk286_micro_executor</code></td><td class="num">3,185</td><td class="num">884</td><td class="num">902</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286</code></td><td class="num">1,471</td><td class="num">496</td><td class="num">16</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286_micro_executor</code></td><td class="num">3,342</td><td class="num">1,129</td><td class="num">903</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286</code></td><td class="num">1,558</td><td class="num">582</td><td class="num">16</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_protected_state</code></td><td class="num">1,273</td><td class="num">88</td><td class="num">540</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286_task_segment_service</code></td><td class="num">669</td><td class="num">65</td><td class="num">734</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286_task_switch_service</code></td><td class="num">516</td><td class="num">296</td><td class="num">652</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286_task_segment_service</code></td><td class="num">665</td><td class="num">56</td><td class="num">734</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286_task_switch_service</code></td><td class="num">500</td><td class="num">296</td><td class="num">652</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_segments</code></td><td class="num">472</td><td class="num">32</td><td class="num">256</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_muldiv</code></td><td class="num">456</td><td class="num">299</td><td class="num">202</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_registers</code></td><td class="num">426</td><td class="num">16</td><td class="num">160</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_tss_service</code></td><td class="num">318</td><td class="num">142</td><td class="num">402</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286_events</code></td><td class="num">266</td><td class="num">0</td><td class="num">129</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286_events</code></td><td class="num">257</td><td class="num">0</td><td class="num">129</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_decoder</code></td><td class="num">229</td><td class="num">3</td><td class="num">0</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286_descriptor</code> (x8)</td><td class="num">200</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286_adjust</code></td><td class="num">147</td><td class="num">100</td><td class="num">84</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286_adjust</code></td><td class="num">149</td><td class="num">100</td><td class="num">84</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_biu</code></td><td class="num">141</td><td class="num">24</td><td class="num">90</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_fetch</code></td><td class="num">139</td><td class="num">91</td><td class="num">98</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286_loadall_service</code></td><td class="num">123</td><td class="num">6</td><td class="num">651</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286_loadall_service</code></td><td class="num">130</td><td class="num">6</td><td class="num">639</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286_operand</code></td><td class="num">116</td><td class="num">0</td><td class="num">3</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286_descriptor</code> (x8)</td><td class="num">112</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_prefetch_queue</code></td><td class="num">111</td><td class="num">16</td><td class="num">58</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_alu</code></td><td class="num">108</td><td class="num">18</td><td class="num">0</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286_operand</code></td><td class="num">104</td><td class="num">0</td><td class="num">2</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_effective_address</code></td><td class="num">100</td><td class="num">80</td><td class="num">0</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_control_decode</code></td><td class="num">88</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_timing_trace</code></td><td class="num">77</td><td class="num">832</td><td class="num">837</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286_shift</code></td><td class="num">76</td><td class="num">6</td><td class="num">57</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_microsequencer</code></td><td class="num">75</td><td class="num">45</td><td class="num">23</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286_shift</code></td><td class="num">75</td><td class="num">6</td><td class="num">57</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286_alu_decode</code></td><td class="num">42</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+                  <tr><td><code>spk286_alu_decode</code></td><td class="num">37</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_operand_decode</code></td><td class="num">32</td><td class="num">0</td><td class="num">49</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_stack</code></td><td class="num">32</td><td class="num">33</td><td class="num">0</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_instruction_context</code></td><td class="num">19</td><td class="num">4</td><td class="num">12</td><td class="num">0</td></tr>
@@ -2285,8 +2288,8 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
                   <tr><td><code>spk286_modrm</code></td><td class="num">3</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_stack_range</code></td><td class="num">2</td><td class="num">34</td><td class="num">0</td><td class="num">0</td></tr>
                   <tr><td><code>spk286_timing_policy</code></td><td class="num">1</td><td class="num">0</td><td class="num">4</td><td class="num">0</td></tr>
-                  <tr><td><code>spk286_microcode_sync_rom</code></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">1</td></tr>
-                  <tr class="total"><td>Total <code>spk286</code> (hierarchical)</td><td class="num">10,931</td><td class="num">3,696</td><td class="num">5,958</td><td class="num">1</td></tr>
+                  <tr><td><code>spk286_microcode_sync_rom</code></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">2</td></tr>
+                  <tr class="total"><td>Total <code>spk286</code> (hierarchical)</td><td class="num">11,075</td><td class="num">4,018</td><td class="num">5,948</td><td class="num">2</td></tr>
                 </tbody>
               </table>
             </div>
@@ -2318,9 +2321,11 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
           <div class="panel">
             <h3>Functional</h3>
             <ul class="open-list">
-              <li>Explicit LOCK privilege rules and the protected zero-count INS/OUTS boundary.</li>
-              <li>LAR/LSL/VERR/VERW truth tables for absent and conforming descriptors.</li>
-              <li>NT after a JMP task switch keeps the incoming value; Intel table 8-2 and some emulators disagree.</li>
+              <li>Which instructions accept LOCK, and the protected zero-count INS/OUTS boundary.</li>
+              <li>LAR/LSL/VERR/VERW with reserved descriptor fields.</li>
+              <li>PUSHA at a protected stack limit: the chip writes upwards from SP-16; SPK286 pushes downwards.</li>
+              <li>Task switches to an undersized TSS: the chip reports #TS with the outgoing selector.</li>
+              <li>Interrupt 8 when an event is delivered to an outer stack at its limit.</li>
               <li>The multi-word boundary and restart matrix is only partly covered.</li>
               <li>Competing-event ordering needs a wider independent matrix.</li>
             </ul>
@@ -2329,10 +2334,9 @@ python3 -m tools.microcode.compile_microcode --pc 0x1</code></pre>
             <h3>Policies pending physical evidence</h3>
             <ul class="open-list">
               <li>NMI blocking is released at IRET start, including a faulting IRET.</li>
-              <li>The STI shadow exists only on a 0-to-1 IF transition.</li>
-              <li>A faulting instruction does not also produce a single-step trap.</li>
+              <li>The STI and POPF shadows exist only on a 0-to-1 IF transition.</li>
               <li>Event recognition order for zero-count REP instructions.</li>
-              <li>LOADALL stepping-specific details and images that clear PE.</li>
+              <li>LOADALL stepping-specific details, the FLAGS word of a protected-mode image and images that clear PE.</li>
             </ul>
           </div>
         </div>
@@ -2424,6 +2428,7 @@ make full-check        <span class="comment"># everything, plus the profiled var
               <tr><td>Intel "Undocumented iAPX 286 Test Instruction"</td><td>LOADALL image layout.</td></tr>
               <tr><td><a href="https://github.com/SingleStepTests/80286" target="_blank" rel="noopener noreferrer">SingleStepTests/80286</a> (MIT)</td><td>Hardware-derived test corpus, fetched at build time and not redistributed.</td></tr>
               <tr><td><a href="https://github.com/dbalsom/moo" target="_blank" rel="noopener noreferrer">dbalsom/moo</a> (MIT)</td><td>MOO 1.1 format, implemented independently.</td></tr>
+              <tr><td>Measurements on a physical Intel N80286-12</td><td>Protected mode, event ordering and other behaviour the manual leaves open or states differently.</td></tr>
               <tr><td>86Box, PCem</td><td>Behavioral cross-references only; no code copied.</td></tr>
               <tr><td>MCL86, 80x86, z386, ao486</td><td>Architectural ideas only; no code copied.</td></tr>
             </tbody>
